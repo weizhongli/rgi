@@ -36,11 +36,12 @@ class Rrna(BaseModel):
 			blast_records = NCBIXML.parse(result_handle)
 
 			for blast_record in blast_records:
-				perfect = {}
-				strict = {}
-				loose = {}
-
 				for alignment in blast_record.alignments:
+					perfect = {}
+					strict = {}
+					loose = {}
+					orf_id = ''
+					
 					align_title = alignment.title
 					orf_info = blast_record.query
 
@@ -173,6 +174,7 @@ class Rrna(BaseModel):
 
 												strict["{}|hsp_num:{}".format(hit_id.decode(),init)] = sinsidedict
 												init += 1
+												orf_id = alignment.hit_def + '|' + str(hsp.sbjct_start) + '|' + str(hsp.sbjct_end)
 
 											else:
 												slinsidedict = {}
@@ -224,10 +226,11 @@ class Rrna(BaseModel):
 
 												loose["{}|hsp_num:{}".format(hit_id.decode(),init)] = slinsidedict
 												init += 1
+												orf_id = alignment.hit_def + '|' + str(hsp.sbjct_start) + '|' + str(hsp.sbjct_end)
 										except Exception as e:
 											logger.warning("Exception : {} -> {} -> Model({})".format(type(e), e, model_id))
 											logger.warning("{} ---> hsp.bits: {} {} ? {}".format(json_data[model_id]["model_name"],hsp.bits,type(hsp.bits), type(true_pass_evalue)))
 
-				blastResults = self.results(blastResults, blast_record.query, perfect, strict , loose)
+					blastResults = self.results(blastResults, orf_id, perfect, strict , loose)
 
 			return blastResults
